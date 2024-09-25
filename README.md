@@ -31,11 +31,13 @@
 
 kafka服务使用docker镜像文件构建，示例：tmp-docker-compose.yml
 
-**安装**
+**yii2使用kafka**
 
 `composer require dnkfk/yii2-kafka`
 
 **消费者组件配置**
+
+component/kafka.php
 
     return [
         'class'   => \Dnkfk\KafkaConnection::class,
@@ -55,7 +57,11 @@ kafka服务使用docker镜像文件构建，示例：tmp-docker-compose.yml
     $msg = ['msg' => 'test']; //$msg可以是数组或字符串
     \Yii::$app->kafka->produce($msg, 'test_topic');
 
-**消费者消费示例**
+**启动消费者**
+
+`php yii kafka/consume test_consumer`
+
+**消费者消费代码示例**
 
     class TestConsumer implements ConsumerInterface
     {
@@ -73,8 +79,4 @@ kafka服务使用docker镜像文件构建，示例：tmp-docker-compose.yml
             var_dump($payload); //输出：['msg' => 'test']
         }
     }
-
-**启动消费者**
-
-`php yii kafka/consume test_consumer`
 
