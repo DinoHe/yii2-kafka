@@ -2,8 +2,6 @@
 
 namespace Dnkfk;
 
-use common\tools\ConsumerInterface;
-use common\tools\Message;
 use Dnkfk\exception\ValidateBindingException;
 use Dnkfk\exception\ValidateConsumerException;
 use RdKafka\Conf;

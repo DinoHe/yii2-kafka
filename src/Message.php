@@ -1,6 +1,6 @@
 <?php
 
-namespace common\tools;
+namespace Dnkfk;
 
 /**
  * 消息载体
