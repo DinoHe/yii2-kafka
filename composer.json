@@ -1,0 +1,29 @@
+{
+  "name": "dnkfk/yii2-kafka",
+  "description": "kafka client for yii2",
+  "type": "yii2-extension",
+  "keywords": ["yii2", "yii2-kafka", "kafka"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "DinoHe",
+      "email": "kevin0779@foxmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.4",
+    "yiisoft/yii2": "~2.0.49",
+    "ext-rdkafka": "*",
+    "ext-json": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Dnkfk\\": "src/"
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "1.0.0-dev"
+    }
+  }
+}
