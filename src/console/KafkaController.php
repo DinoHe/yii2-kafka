@@ -17,7 +17,7 @@ class KafkaController extends Controller
      * @param string $consumerName
      * @return void
      */
-    public function consume(string $consumerName)
+    public function actionConsume(string $consumerName)
     {
         $kafka = \Yii::$app->get('kafka');
 
