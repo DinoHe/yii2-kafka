@@ -1,6 +1,6 @@
 <?php
 
-namespace Dnkfk\console;
+namespace Dnkfk\controllers;
 
 use yii\console\Controller;
 
