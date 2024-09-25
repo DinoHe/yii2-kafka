@@ -20,7 +20,7 @@ class KafkaConnection extends Component
     /**
      * @var array 连接主机：端口
      */
-    public array $conn;
+    public array $conn = [];
 
     /**
      * @var int 生产者或消费者请求超时时间，毫秒
@@ -66,10 +66,10 @@ class KafkaConnection extends Component
      * @var array 消费者主题绑定
      * 绑定示例：
      * [
-     *  'consumer' => 'consumer',
-     *  'topics'   => ['topic'],
-     *  'group'    => 'consumer',
-     *  'callback' => consumer::class
+     *  'consumer' => 'test_consumer',
+     *  'topics'   => ['test_topic'],
+     *  'group'    => 'test_group',
+     *  'callback' => TestConsumer::class
      * ]
      */
     public array $bindings = [];
@@ -143,13 +143,15 @@ class KafkaConnection extends Component
                         throw new ValidateConsumerException(sprintf('%s不是%s实例', $consumerConf['callback'], ConsumerInterface::class));
                     }
 
+                    $t = microtime(true);
+
                     $call->execute($this->createMessage($message));
 
                     if (!$this->enableAutoSubmit) {
                         $consumer->commit();
                     }
 
-                    echo sprintf('%s consume successful!', date('Y-m-d H:i:s')) . PHP_EOL;
+                    echo sprintf('%s consume successful! %ss', date('Y-m-d H:i:s'), round(microtime(true) - $t, 4)) . PHP_EOL;
                     break;
                 default:
                     break;
@@ -168,7 +170,7 @@ class KafkaConnection extends Component
         $conf = new Conf();
         $conf->set('group.id', $consumerConf['group']);
         $conf->set('metadata.broker.list', implode(',', $this->conn));
-        $conf->set('enable.auto.commit', (string)$this->enableAutoSubmit);//自动提交
+        $conf->set('enable.auto.commit', $this->enableAutoSubmit ? 'true' : 'false');//自动提交
         $conf->set('partition.assignment.strategy', $this->partitionAssigmentStrategy); //均匀分配策略
         $conf->set('fetch.wait.max.ms', (string)$this->maxFetchWait); // 最大拉取消息等待时间
         $conf->set('metadata.max.age.ms', (string)$this->maxMetadataAge); // 每 x 秒更新一次元数据
@@ -222,6 +224,7 @@ class KafkaConnection extends Component
             if (!isset($binding['consumer'])) throw new ValidateBindingException('消费者未配置');
             if (!isset($binding['group'])) throw new ValidateBindingException('消费者组未配置');
             if (!isset($binding['topics'])) throw new ValidateBindingException('主题未配置');
+            if (!is_array($binding['topics'])) throw new ValidateBindingException('主题配置必须是数组');
             if (!isset($binding['callback'])) throw new ValidateBindingException('回调未配置');
         }
     }

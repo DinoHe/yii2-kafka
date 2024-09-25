@@ -3,6 +3,7 @@
 namespace Dnkfk\controllers;
 
 use yii\console\Controller;
+use yii\console\ExitCode;
 
 /**
  * kafka
@@ -15,12 +16,14 @@ class KafkaController extends Controller
      * 运行消费者
      *
      * @param string $consumerName
-     * @return void
+     * @return int
      */
-    public function actionConsume(string $consumerName)
+    public function actionConsume(string $consumerName): int
     {
         $kafka = \Yii::$app->get('kafka');
 
         $kafka->consume($consumerName);
+
+        return ExitCode::OK;
     }
 }

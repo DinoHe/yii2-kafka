@@ -12,12 +12,23 @@ class Message
 {
     private string $payload;
 
+    /**
+     * 设置消息载体
+     *
+     * @param string $payload
+     * @return void
+     */
     public function setPayload(string $payload)
     {
         $this->payload = $payload;
     }
 
-    public function payload(): string
+    /**
+     * 获取消息载体
+     *
+     * @return string
+     */
+    public function getPayload(): string
     {
         return $this->payload;
     }
