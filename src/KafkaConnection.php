@@ -79,6 +79,10 @@ class KafkaConnection extends Component
      */
     public array $bindings = [];
 
+    private ProducerTopic $producerTopic;
+
+    private Producer $producer;
+
     /**
      * 投递消息到队列
      *
@@ -93,18 +97,15 @@ class KafkaConnection extends Component
             throw new ValidateBindingException(sprintf('主题未配置：%s', $topic));
         }
 
-        //构建生产者
-        $producer = $this->buildProducer();
-
-        //构建主题
-        $topic = $producer->newTopic($topic);
+        //构建生产者主题
+        $topic = $this->buildProducerTopic($topic);
 
         //发布消息到主题
         $topic->produce(RD_KAFKA_PARTITION_UA, 0, !is_string($msg) ? json_encode($msg) : $msg);
 
         //等待消息发送完成（获取队列长度，大于0表示消息还未发送完）
-        while ($producer->getOutQLen() > 0) {
-            $producer->poll(100);
+        while ($this->producer->getOutQLen() > 0) {
+            $this->producer->poll(100);
         }
     }
 
@@ -115,9 +116,30 @@ class KafkaConnection extends Component
      */
     private function buildProducer(): Producer
     {
-        $conf = $this->initProducerConf();
+        if (!isset($this->producer)) {
+            $conf = $this->initProducerConf();
 
-        return new Producer($conf);
+            $this->producer = new Producer($conf);
+        }
+
+        return $this->producer;
+    }
+
+    /**
+     * 构建生产者主题
+     *
+     * @param string $topic
+     * @return ProducerTopic
+     */
+    public function buildProducerTopic(string $topic): ProducerTopic
+    {
+        if (!isset($this->producerTopic)) {
+            $producer = $this->buildProducer();
+
+            $this->producerTopic = $producer->newTopic($topic);
+        }
+
+        return $this->producerTopic;
     }
 
     /**
@@ -265,5 +287,10 @@ class KafkaConnection extends Component
             if (!is_array($binding['topics'])) throw new ValidateBindingException('主题配置必须是数组');
             if (!isset($binding['callback'])) throw new ValidateBindingException('回调未配置');
         }
+    }
+
+    public function __destruct()
+    {
+        unset($this->producer, $this->producerTopic);
     }
 }
