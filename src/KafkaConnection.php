@@ -63,6 +63,11 @@ class KafkaConnection extends Component
     public int $maxReconnectBackoff = 1000;
 
     /**
+     * @var array 主题配置
+     */
+    public array $topics = [];
+
+    /**
      * @var array 消费者主题绑定
      * 绑定示例：
      * [
@@ -80,20 +85,39 @@ class KafkaConnection extends Component
      * @param mixed $msg 发送的消息
      * @param string $topic 消息主题
      * @return void
+     * @throws ValidateBindingException
      */
     public function produce($msg, string $topic)
     {
-        $conf = $this->initProducerConf();
+        if (!in_array($topic, $this->topics)) {
+            throw new ValidateBindingException(sprintf('主题未配置：%s', $topic));
+        }
 
-        $producer = new Producer($conf);
-        $topic    = $producer->newTopic($topic);
+        //构建生产者
+        $producer = $this->buildProducer();
 
+        //构建主题
+        $topic = $producer->newTopic($topic);
+
+        //发布消息到主题
         $topic->produce(RD_KAFKA_PARTITION_UA, 0, !is_string($msg) ? json_encode($msg) : $msg);
 
-        //获取队列长度，大于0表示消息还未发送完
+        //等待消息发送完成（获取队列长度，大于0表示消息还未发送完）
         while ($producer->getOutQLen() > 0) {
             $producer->poll(100);
         }
+    }
+
+    /**
+     * 构建生产者
+     *
+     * @return Producer
+     */
+    private function buildProducer(): Producer
+    {
+        $conf = $this->initProducerConf();
+
+        return new Producer($conf);
     }
 
     /**
@@ -122,30 +146,31 @@ class KafkaConnection extends Component
     {
         echo sprintf('%s consumer start!', date('Y-m-d H:i:s')) . PHP_EOL;
 
+        //绑定验证
         $this->validateBinding();
 
-        $consumerConf = $this->getConsumerConf($consumer);
+        //获取绑定配置
+        $bindingConf = $this->getBindingConf($consumer);
 
-        $conf = $this->initConsumerConf($consumerConf);
-
-        $consumer = new KafkaConsumer($conf);
+        //构建消费者
+        $consumer = $this->buildConsumer($bindingConf);
 
         //订阅主题
-        $consumer->subscribe($consumerConf['topics']);
+        $consumer->subscribe($bindingConf['topics']);
 
         while (true) {
             $message = $consumer->consume(120000);
             switch ($message->err) {
                 case RD_KAFKA_RESP_ERR_NO_ERROR:
 
-                    $call = \Yii::createObject($consumerConf['callback']);
+                    $call = \Yii::createObject($bindingConf['callback']);
                     if (!$call instanceof ConsumerInterface) {
-                        throw new ValidateConsumerException(sprintf('%s不是%s实例', $consumerConf['callback'], ConsumerInterface::class));
+                        throw new ValidateConsumerException(sprintf('%s不是%s实例', $bindingConf['callback'], ConsumerInterface::class));
                     }
 
                     $t = microtime(true);
 
-                    $call->execute($this->createMessage($message));
+                    $call->execute($this->buildMessage($message));
 
                     if (!$this->enableAutoSubmit) {
                         $consumer->commit();
@@ -157,6 +182,19 @@ class KafkaConnection extends Component
                     break;
             }
         }
+    }
+
+    /**
+     * 构建消费者
+     *
+     * @param array $bindingConf
+     * @return KafkaConsumer
+     */
+    private function buildConsumer(array $bindingConf): KafkaConsumer
+    {
+        $conf = $this->initConsumerConf($bindingConf);
+
+        return new KafkaConsumer($conf);
     }
 
     /**
@@ -186,7 +224,7 @@ class KafkaConnection extends Component
      * @param KafkaMessage $message
      * @return Message
      */
-    private function createMessage(KafkaMessage $message): Message
+    private function buildMessage(KafkaMessage $message): Message
     {
         $msg = new Message();
         $msg->setPayload($message->payload);
@@ -195,13 +233,13 @@ class KafkaConnection extends Component
     }
 
     /**
-     * 获取消费者配置
+     * 获取消费者绑定配置
      *
      * @param string $consumer
      * @return array|mixed
-     * @throws \Exception
+     * @throws ValidateBindingException
      */
-    private function getConsumerConf(string $consumer)
+    private function getBindingConf(string $consumer)
     {
         foreach ($this->bindings as $binding) {
             if ($binding['consumer'] == $consumer) {
@@ -209,14 +247,14 @@ class KafkaConnection extends Component
             }
         }
 
-        throw new ValidateBindingException(sprintf('%s消费者未配置', $consumer));
+        throw new ValidateBindingException(sprintf('%s消费者绑定信息未配置', $consumer));
     }
 
     /**
      * 绑定配置验证
      *
      * @return void
-     * @throws \Exception
+     * @throws ValidateBindingException
      */
     private function validateBinding()
     {

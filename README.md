@@ -41,7 +41,8 @@ component/kafka.php
 
     return [
         'class'   => \Dnkfk\KafkaConnection::class,
-        'conn'    => ['localhost:9092'],
+        'conn'    => ['localhost:9092'], //连接主机配置
+        'topics'  => ['test_topic'], //所有需要订阅的主题
         'binding' => [
             [
                 'consumer' => 'test_consumer', //消费者名称
