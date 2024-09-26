@@ -158,15 +158,15 @@ class KafkaConnection extends Component
         //订阅主题
         $consumer->subscribe($bindingConf['topics']);
 
+        $call = \Yii::createObject($bindingConf['callback']);
+        if (!$call instanceof ConsumerInterface) {
+            throw new ValidateConsumerException(sprintf('%s不是%s实例', $bindingConf['callback'], ConsumerInterface::class));
+        }
+
         while (true) {
             $message = $consumer->consume(120000);
             switch ($message->err) {
                 case RD_KAFKA_RESP_ERR_NO_ERROR:
-
-                    $call = \Yii::createObject($bindingConf['callback']);
-                    if (!$call instanceof ConsumerInterface) {
-                        throw new ValidateConsumerException(sprintf('%s不是%s实例', $bindingConf['callback'], ConsumerInterface::class));
-                    }
 
                     $t = microtime(true);
 
