@@ -22,6 +22,7 @@
     }
   },
   "extra": {
-    "bootstrap": "Dnkfk\\DependencyInjection"
+    "bootstrap": "Dnkfk\\DependencyInjection",
+    "readme": "README.md"
   }
 }
