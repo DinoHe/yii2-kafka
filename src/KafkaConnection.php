@@ -260,6 +260,7 @@ class KafkaConnection extends Component
         $conf->set('metadata.max.age.ms', (string)$this->maxMetadataAge); // 每 x 秒更新一次元数据
         $conf->set('session.timeout.ms', (string)$this->sessionTimeOut); // 消费者会话超时时间
         $conf->set('reconnect.backoff.max.ms', (string)$this->maxReconnectBackoff); // 最大重连间隔
+        $conf->set('auto.offset.reset', 'earliest'); // 偏移量重置，从最早的消息开始消费
 
         return $conf;
     }
