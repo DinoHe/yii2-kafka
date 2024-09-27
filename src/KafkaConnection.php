@@ -88,10 +88,11 @@ class KafkaConnection extends Component
      *
      * @param mixed $msg 发送的消息
      * @param string $topic 消息主题
+     * @param int $partition 分区，默认随机分区
      * @return void
      * @throws ValidateBindingException
      */
-    public function produce($msg, string $topic)
+    public function produce($msg, string $topic, int $partition = RD_KAFKA_PARTITION_UA)
     {
         if (!in_array($topic, $this->topics)) {
             throw new ValidateBindingException(sprintf('主题未配置：%s', $topic));
@@ -101,7 +102,7 @@ class KafkaConnection extends Component
         $topic = $this->buildProducerTopic($topic);
 
         //发布消息到主题
-        $topic->produce(RD_KAFKA_PARTITION_UA, 0, !is_string($msg) ? json_encode($msg) : $msg);
+        $topic->produce($partition, 0, !is_string($msg) ? json_encode($msg) : $msg);
 
         //等待消息发送完成（获取队列长度，大于0表示消息还未发送完）
         while ($this->producer->getOutQLen() > 0) {
@@ -289,8 +290,4 @@ class KafkaConnection extends Component
         }
     }
 
-    public function __destruct()
-    {
-        unset($this->producer, $this->producerTopic);
-    }
 }
