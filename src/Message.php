@@ -12,6 +12,13 @@ class Message
 {
     private string $payload;
 
+    private string $uniqueKey;
+
+    public function __construct()
+    {
+        $this->uniqueKey = str_replace('.', '', uniqid(random_int(1, 10000), true));
+    }
+
     /**
      * 设置消息载体
      *
@@ -31,5 +38,15 @@ class Message
     public function getPayload(): string
     {
         return $this->payload;
+    }
+
+    /**
+     * 获取消息唯一标识
+     *
+     * @return string
+     */
+    public function getUniqueKey(): string
+    {
+        return $this->uniqueKey;
     }
 }
