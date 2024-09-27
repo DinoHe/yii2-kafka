@@ -5,7 +5,7 @@
 2、php >= 7.4
 
 3、RdKafka扩展，扩展安装如下 
-
+````
     通过git源码编译安装：
 
     安装librdkafka：
@@ -28,17 +28,19 @@
     
     php.ini配置：
     extension = rdkafka.so
-
+````
 kafka服务使用docker镜像文件构建，示例：tmp-docker-compose.yml
 
 **yii2使用kafka**
 
-`composer require dnkfk/yii2-kafka`
+````text
+ composer require dnkfk/yii2-kafka
+ ````
 
 **消费者组件配置**
 
 component/kafka.php
-
+````php
     return [
         'class'   => \Dnkfk\KafkaConnection::class,
         'conn'    => ['localhost:9092'], //连接主机配置
@@ -52,18 +54,22 @@ component/kafka.php
             ]
         ]
     ];
-
+````
 **发布消息到主题**
-
+````php
     $msg = ['msg' => 'test']; //$msg可以是数组或字符串
     \Yii::$app->kafka->produce($msg, 'test_topic');
-
+````
 **启动消费者**
 
-`php yii kafka/consume test_consumer`
+````text
+php yii kafka/consume test_consumer
+````
 
 **消费者消费代码示例**
-
+````php
+    use Dnkfk\ConsumerInterface;
+    
     class TestConsumer implements ConsumerInterface
     {
     
@@ -80,4 +86,4 @@ component/kafka.php
             var_dump($payload); //输出：['msg' => 'test']
         }
     }
-
+````
