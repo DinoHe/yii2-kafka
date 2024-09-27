@@ -8,6 +8,7 @@ use RdKafka\Conf;
 use RdKafka\KafkaConsumer;
 use RdKafka\Message as KafkaMessage;
 use RdKafka\Producer;
+use RdKafka\ProducerTopic;
 use yii\base\Component;
 
 /**
