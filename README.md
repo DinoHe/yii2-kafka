@@ -5,7 +5,7 @@
 2、php >= 7.4
 
 3、RdKafka扩展，扩展安装如下 
-````
+````text
     通过git源码编译安装：
 
     安装librdkafka：
