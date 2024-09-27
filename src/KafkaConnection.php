@@ -100,11 +100,33 @@ class KafkaConnection extends Component
         }
 
         //构建生产者主题
-        $topic = $this->buildProducerTopic($topic);
+        $this->buildProducerTopic($topic);
 
         //发布消息到主题
-        $topic->produce($partition, 0, !is_string($msg) ? json_encode($msg) : $msg);
+        $this->produceMsg($msg, $partition);
 
+        $this->wait();
+    }
+
+    /**
+     * 发布消息
+     *
+     * @param mixed $msg
+     * @param int $partition
+     * @return void
+     */
+    public function produceMsg($msg, int $partition = RD_KAFKA_PARTITION_UA)
+    {
+        $this->producerTopic->produce($partition, 0, !is_string($msg) ? json_encode($msg) : $msg);
+    }
+
+    /**
+     * 等待发送完成
+     *
+     * @return void
+     */
+    public function wait()
+    {
         //等待消息发送完成（获取队列长度，大于0表示消息还未发送完）
         while ($this->producer->getOutQLen() > 0) {
             $this->producer->poll(100);
@@ -131,9 +153,9 @@ class KafkaConnection extends Component
      * 构建生产者主题
      *
      * @param string $topic
-     * @return ProducerTopic
+     * @return KafkaConnection
      */
-    public function buildProducerTopic(string $topic): ProducerTopic
+    public function buildProducerTopic(string $topic): KafkaConnection
     {
         if (!isset($this->producerTopic)) {
             $producer = $this->buildProducer();
@@ -141,7 +163,7 @@ class KafkaConnection extends Component
             $this->producerTopic = $producer->newTopic($topic);
         }
 
-        return $this->producerTopic;
+        return $this;
     }
 
     /**
