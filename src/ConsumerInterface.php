@@ -2,6 +2,11 @@
 
 namespace Dnkfk;
 
+/**
+ * interface
+ *
+ * @slice 2024-09-25 13:44
+ */
 interface ConsumerInterface
 {
     /**

@@ -8,7 +8,7 @@ use yii\console\ExitCode;
 /**
  * kafka
  *
- * @slice  2024-09-25 09:08
+ * @slice 2024-09-25 09:08
  */
 class KafkaController extends Controller
 {

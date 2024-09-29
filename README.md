@@ -55,11 +55,26 @@ component/kafka.php
         ]
     ];
 ````
-**发布消息到主题**
+**发布消息到主题代码示例**
+
+直接发布消息
 ````php
     $msg = ['msg' => 'test']; //$msg可以是数组或字符串
     \Yii::$app->kafka->produce($msg, 'test_topic');
 ````
+批量发布消息
+
+````php
+    //构建生产者主题
+    $kafka = \Yii::$app->kafka->buildProducerTopic('test_topic');
+    //批量发布消息到主题
+    for ($i = 0; $i < 10; $i++) {
+        $kafka->produceMsg("message {$i}");
+    }
+    //等待消息全部发布完成
+    $kafka->wait();
+````
+
 **启动消费者**
 
 ````text
@@ -69,6 +84,7 @@ php yii kafka/consume test_consumer
 **消费者消费代码示例**
 ````php
     use Dnkfk\ConsumerInterface;
+    use Dnkfk\Message;
     
     class TestConsumer implements ConsumerInterface
     {
@@ -81,7 +97,7 @@ php yii kafka/consume test_consumer
          */
         public function execute(Message $message)
         {
-            $payload = json_decode($message->payload(), true);
+            $payload = json_decode($message->getPayload(), true);
     
             var_dump($payload); //输出：['msg' => 'test']
         }

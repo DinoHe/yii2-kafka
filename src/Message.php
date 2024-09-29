@@ -5,8 +5,7 @@ namespace Dnkfk;
 /**
  * 消息载体
  *
- * @author Dino
- * @slice  2024-09-25 13:44
+ * @slice 2024-09-25 13:44
  */
 class Message
 {

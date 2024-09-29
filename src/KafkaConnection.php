@@ -14,7 +14,7 @@ use yii\base\Component;
 /**
  * kafka连接
  *
- * @slice  2024-09-24 17:05
+ * @slice 2024-09-24 17:05
  */
 class KafkaConnection extends Component
 {
