@@ -7,8 +7,6 @@ use Dnkfk\exception\ValidateConsumerException;
 use RdKafka\Conf;
 use RdKafka\KafkaConsumer;
 use RdKafka\Message as KafkaMessage;
-use RdKafka\Producer;
-use RdKafka\ProducerTopic;
 use yii\base\Component;
 
 /**
@@ -85,10 +83,6 @@ class KafkaConnection extends Component
      */
     public array $bindings = [];
 
-    private ProducerTopic $producerTopic;
-
-    private Producer $producer;
-
     /**
      * 投递消息到队列
      *
@@ -105,70 +99,25 @@ class KafkaConnection extends Component
         }
 
         //构建生产者主题
-        $this->buildProducerTopic($topic);
+        $producer = $this->getProducer($topic);
 
         //发布消息到主题
-        $this->produceMsg($msg, $partition);
+        $producer->produceMsg($msg, $partition);
 
-        $this->wait();
+        $producer->wait();
     }
 
     /**
-     * 发布消息
+     * 获取生产者
      *
-     * @param mixed $msg
-     * @param int $partition
-     * @return void
+     * @param string $topic 主题
+     * @return KafkaProducer
      */
-    public function produceMsg($msg, int $partition = RD_KAFKA_PARTITION_UA)
+    public function getProducer(string $topic): KafkaProducer
     {
-        $this->producerTopic->produce($partition, 0, !is_string($msg) ? json_encode($msg) : $msg);
-    }
+        $conf = $this->initProducerConf();
 
-    /**
-     * 等待发送完成
-     *
-     * @return void
-     */
-    public function wait()
-    {
-        //等待消息发送完成（获取队列长度，大于0表示消息还未发送完）
-        while ($this->producer->getOutQLen() > 0) {
-            $this->producer->poll(100);
-        }
-    }
-
-    /**
-     * 构建生产者
-     *
-     * @return Producer
-     */
-    private function buildProducer(): Producer
-    {
-        if (!isset($this->producer)) {
-            $conf = $this->initProducerConf();
-
-            $this->producer = new Producer($conf);
-        }
-
-        return $this->producer;
-    }
-
-    /**
-     * 构建生产者主题
-     *
-     * @param string $topic
-     * @return KafkaConnection
-     */
-    public function buildProducerTopic(string $topic): KafkaConnection
-    {
-        if (!isset($this->producerTopic)) {
-            $producer = $this->buildProducer();
-
-            $this->producerTopic = $producer->newTopic($topic);
-        }
-
-        return $this;
+        return new KafkaProducer($topic, $conf);
     }
 
     /**

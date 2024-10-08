@@ -66,13 +66,13 @@ component/kafka.php
 
 ````php
     //构建生产者主题
-    $kafka = \Yii::$app->kafka->buildProducerTopic('test_topic');
+    $producer = \Yii::$app->kafka->getProducer('test_topic');
     //批量发布消息到主题
     for ($i = 0; $i < 10; $i++) {
-        $kafka->produceMsg("message {$i}");
+        $producer->produceMsg("message {$i}");
     }
     //等待消息全部发布完成
-    $kafka->wait();
+    $producer->wait();
 ````
 
 **启动消费者**
