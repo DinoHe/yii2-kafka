@@ -3,10 +3,7 @@
 namespace Dnkfk;
 
 use Dnkfk\exception\ValidateBindingException;
-use Dnkfk\exception\ValidateConsumerException;
 use RdKafka\Conf;
-use RdKafka\KafkaConsumer;
-use RdKafka\Message as KafkaMessage;
 use yii\base\Component;
 
 /**
@@ -144,57 +141,32 @@ class KafkaConnection extends Component
      */
     public function consume(string $consumer)
     {
-        echo sprintf('%s consumer start!', date('Y-m-d H:i:s')) . PHP_EOL;
-
         //绑定验证
         $this->validateBinding();
 
-        //获取绑定配置
-        $bindingConf = $this->getBindingConf($consumer);
-
         //构建消费者
-        $consumer = $this->buildConsumer($bindingConf);
+        $consumer = $this->buildConsumer($consumer);
 
-        //订阅主题
-        $consumer->subscribe($bindingConf['topics']);
-
-        $call = \Yii::createObject($bindingConf['callback']);
-        if (!$call instanceof ConsumerInterface) {
-            throw new ValidateConsumerException(sprintf('%s不是%s实例', $bindingConf['callback'], ConsumerInterface::class));
-        }
-
-        while (true) {
-            $message = $consumer->consume(120000);
-            switch ($message->err) {
-                case RD_KAFKA_RESP_ERR_NO_ERROR:
-
-                    $t = microtime(true);
-
-                    $call->execute($this->buildMessage($message));
-
-                    if (!$this->enableAutoSubmit) {
-                        $consumer->commit();
-                    }
-
-                    echo sprintf('%s consume successful! %ss', date('Y-m-d H:i:s'), round(microtime(true) - $t, 4)) . PHP_EOL;
-                    break;
-                default:
-                    break;
-            }
-        }
+        //启动消费
+        $consumer->startConsume();
     }
 
     /**
      * 构建消费者
      *
-     * @param array $bindingConf
+     * @param string $consumer
      * @return KafkaConsumer
+     * @throws ValidateBindingException
      */
-    private function buildConsumer(array $bindingConf): KafkaConsumer
+    private function buildConsumer(string $consumer): KafkaConsumer
     {
+        //获取绑定配置
+        $bindingConf = $this->getBindingConf($consumer);
+
+        //初始化消费者配置
         $conf = $this->initConsumerConf($bindingConf);
 
-        return new KafkaConsumer($conf);
+        return new KafkaConsumer($bindingConf['topics'], $bindingConf['callback'], $conf, $this->enableAutoSubmit);
     }
 
     /**
@@ -217,20 +189,6 @@ class KafkaConnection extends Component
         $conf->set('auto.offset.reset', $this->offsetReset); // 偏移量重置，默认从最早的消息开始消费
 
         return $conf;
-    }
-
-    /**
-     * 构建消息实例
-     *
-     * @param KafkaMessage $message
-     * @return Message
-     */
-    private function buildMessage(KafkaMessage $message): Message
-    {
-        $msg = new Message();
-        $msg->setPayload($message->payload);
-
-        return $msg;
     }
 
     /**

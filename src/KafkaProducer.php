@@ -9,7 +9,6 @@ use RdKafka\Conf;
 /**
  * 生产者
  *
- * @author Dino
  * @slice  2024-10-08 17:04
  */
 class KafkaProducer
